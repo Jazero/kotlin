@@ -1,0 +1,163 @@
+### 面向对象 
+
+​       **kotlin默认为所有类、方法、属性都提供了final关键字类修饰，默认情况下类不能派生子类，方法、属性不能被重写。**
+
+​      **提供了对象表达式来代替java的匿名内部类语法。匿名内部类只能指定一个父类型，而对象表达式可指定多个父类型。**
+
+​       **enum class关键字用于创建枚举类，是一种不能自由创建对象的类。枚举类的对象在定义类时已经固定下来。**
+
+- ##### 扩展 
+
+  - ##### 扩展方法
+
+  **定义一个函数，在含糊名前增加被扩展的类（或接口）名和点好（.）。**
+
+  原理：编译器在编译时会进行如下步骤：
+
+  1、检查调用函数的类型。
+
+  2、在类里查看是否包含该方法，如果有无须进行处理，直接编译即可。
+
+  3、查找父类是否包含该方法，如果有会执行父类方法。
+
+  4、查找是否为该类进行扩展方法，也就是查找系统中是否包含了该函数定义，如果找到该函数，则编译器会执行静态解析。
+
+  5、全都找不到编译器报错。
+
+  kotlin的扩展并没有真正改变被扩展的类，当调用扩展方法时，编译器会将这行代码静态极细微调用函数，也就是说调用扩展方法时由其所在表达式的编译时类型决定。
+
+  ```kotlin
+  //编译前
+  open class Raw 
+  fun Raw.play() {
+      println("ext fun")
+  }
+  fun main() {
+      var a: Raw = Raw()
+      a.play() //该扩展函数编译后变为一静态方法传入调用对象。
+  }
+  //编译后
+  public final class ObjectExtKt {
+     public static final void main() {
+        Raw a = new Raw();
+        play(a);
+     }
+  
+     // $FF: synthetic method
+     public static void main(String[] var0) {
+        main();
+     }
+  
+     public static final void play(@NotNull Raw $this$play) {
+        Intrinsics.checkParameterIsNotNull($this$play, "$this$play");
+        String var1 = "ext fun";
+        System.out.println(var1);
+     }
+  }
+  --------------------------------------------------------------------
+  //编译前
+  open class Raw {
+      fun play() {
+          println("11111")
+      }
+  }
+  fun Raw.play() {
+      println("ext fun")
+  }
+  fun main() {
+      var a: Raw = Raw()
+      a.play() //该扩展函数编译后变为一静态方法传入调用对象。
+  }
+  //编译后
+  public class Raw {
+     public final void play() {
+        String var1 = "11111";
+        System.out.println(var1);
+     }
+  }
+  
+  public final class ObjectExtKt {
+     public static final void main() {
+        Raw a = new Raw();
+        a.play();  //如果类中有同名方法，那么不会调用编译后的静态方法，直接调用该类中的方法
+     }
+  
+     // $FF: synthetic method
+     public static void main(String[] var0) {
+        main();
+     }
+  
+     public static final void play(@NotNull Raw $this$play) {
+        Intrinsics.checkParameterIsNotNull($this$play, "$this$play");
+        String var1 = "ext fun";
+        System.out.println(var1);
+     }
+  }
+  ```
+
+  **可空类型扩展方法需要在方法中处理null情况。因为null 值调用方法会出空指针异常**
+
+  - ##### 扩展属性
+
+    kotlin扩展属性并不是真正修改目标类，因此扩展的属性其实是通过添加getter、setter方法实现的。没有幕后字段。简单来说，扩展的属性只能是计算属性。
+
+    1、扩展属性不能有初始值
+
+    2、不能用field关键字显示访问幕后字段
+
+    3、扩展只读属性必须提供getter方法。
+
+    ```kotlin
+    var Raw.porte:String
+        get() = "aaaaa"
+        set(value)  {
+            println("bbbbb")
+        }
+    open class Raw {
+        fun play() {
+            println("ccccc")
+        }
+    }
+    fun main() {
+        var a: Raw = Raw()
+        println(a.porte)
+    
+    }
+    ```
+
+- ##### 匿名内部类   （对象表达式）
+
+  对象表达式是增强版的匿名内部类，它支持指定0～N个父类型。有如下规则：
+
+  1、对象表达式不能是抽象类，因为系统在创建对象表达式时会立即创建对象。
+
+  2、对象表达式不能定义构造器。但对象表达式可以定义初始化块，可以通过初始化块来完成构造器需要完成的事情。
+
+  3、对象表达式可以包含内部类，不能包含嵌套类。
+
+- ##### 枚举类
+
+  1、枚举类可以实现一个或多个接口，使用enum定义的枚举类默认继承kotlin.Enum类。
+
+  2、使用enum定义的非抽象的枚举类不能使用open修饰，不能派生子类。
+
+  3、只能使用private访问控制符。
+
+  4、所有实例必须在枚举类的第一行显式列出。
+
+  ```kotlin
+  enum class Seanson{
+      SPRING,SUMMER,FALL,WINTER
+  }
+  
+  fun main() {
+      for(s in Seanson.values()){
+          println(s)
+      }
+      val seansonName = "SUMMER"
+      var s:Seanson = Seanson.valueOf(seansonName)
+      println(s)
+  }
+  ```
+
+  
