@@ -1,0 +1,95 @@
+首先看一下kotlin的一个示例：
+
+```kotlin
+open class Pet{
+    open val name:String = "pet"
+}
+
+class Dog : Pet(){
+    override val name:String = "dog"
+}
+
+fun main(){
+    var dog:Pet = Dog()
+    println(dog.name)
+}
+//输出结果是“dog”
+```
+
+而在java中：
+
+```java
+class Pet{
+    public String name = "pet";
+}
+
+class Dog extends Pet{
+    public String name = "dog";
+}
+
+public class Test {
+    public static void main(String[] args) {
+        Pet dog = new Dog();
+        System.out.println(dog.name);
+    }
+}
+//输出结果是“pet“
+```
+
+怎么回事？不是说kotlin是100%兼容java的么？为什么一样的继承 ，实例化后调用属性的结果却不相同？
+
+我们知道在java中 重写只发生在方法中。与实例的属性无关。当实例化子类后，子类也会实例化父类对象。当我们为name增加getter方法时候，再看一下：
+
+```java
+public class Test {
+    public static void main(String[] args) {
+        Pet dog = new Dog();
+        System.out.println(dog.name);
+        System.out.println(dog.getName());
+    }
+}
+
+
+class Pet{
+    public String name = "pet";
+
+    public String getName() {
+
+        return name;
+    }
+}
+
+class Dog extends Pet{
+    public String name = "dog";
+
+    @Override
+    public String getName() {
+        System.out.println(super.name+"    ------");
+        return name;
+    }
+}
+//输出结果：
+//pet
+//pet    ------
+//dog
+```
+
+我们从这里面看到，getName方法重写了，调用后输出了子类的"dog"。
+
+其实我们把kotlin代码编译后的二进制文件反编译后可以看到(方法android studio中tool—>show kotlin byte code—>decampile)：
+
+```java
+public static final void main() {
+      Pet dog = (Pet)(new Dog());
+      String var1 = dog.getName();
+      boolean var2 = false;
+      System.out.println(var1);
+   }
+
+   // $FF: synthetic method
+   public static void main(String[] var0) {
+      main();
+   }
+```
+
+原来真正原因是在这里。kotlin调用属性使用的是get方法！
